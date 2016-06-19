@@ -22,6 +22,7 @@ Before logging, you must also place your Particle account's access_token in `con
 ```javascript
 "access_token" : "c51b571312b04a6884cc03eeb08b365c8ace0b15",
 ```
+(The above token and the one currently listed in `config.json` don't go anywhere, FYI)
 
 List the names of events that you want to log in the events array in `config/config.json`. The event name is the first argument the `Particle.publish` command. For example in `Particle.publish("temp", "10F");`, "temp" is the event name. For example to log "temp" and "air_quality" events:
 
