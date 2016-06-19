@@ -8,27 +8,32 @@
 var EventSource = require('eventsource'); // Pull in event source
 var LogEvent = require('./models/LogEvent.js');
 var config = require('./config/config.json'); 
+var fs = require('fs');
 
-module.exports = function(){
+module.exports = function(CSVLogging, CSVName){
 	var es = new EventSource("https://api.particle.io/v1/devices/events?access_token="+config.access_token); // Listen to the stream 
 	for (index in config.events){
-		es.addEventListener(config.events[index],function(message){ handleEvent(message, config.events[index]) });
+		es.addEventListener(config.events[index],function(message){ handleEvent(message, config.events[index], CSVLogging, CSVName)});
 	}
 } 
 
-function handleEvent (message, eventName) {
+function handleEvent (message, eventName, CSVLogging, CSVName) {
 	console.log("New Message");
 	realData = JSON.parse(message.data);
 	console.log(realData)
 	realData.name = eventName;
-	addRecord(realData); 
+	console.log(CSVLogging);
+	if (!CSVLogging){	// currently you can only CSV log when not logging to mongodb
+		addRecord(realData); 
+	} else{ 
+		updateCSV(realData, CSVName);	
+	}
 } 
 
 function addRecord(data){
 	var toAdd= {
 		coreid:			data.coreid,
 		published_at:	new Date(data.published_at), 
-		probeid:		data.probeid,
 		data:			data.data,
 		name:			data.name
 	}
@@ -38,4 +43,11 @@ function addRecord(data){
 		if(err) console.log("error in saving to database"+err);
 	})
 	// io.emit(data.probeid,newRecord);
+}
+function updateCSV(data, CSVName){
+	var appendStr = '' + data.name + ', ' + data.coreid + ', ' + data.published_at + ', ' + data.data +"\n"; 	
+	fs.appendFile(CSVName, appendStr, function(err){
+		if(err) throw err;
+	});
+	console.log('Logged');
 }
